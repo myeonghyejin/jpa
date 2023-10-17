@@ -11,10 +11,6 @@ public interface UserService {
 
     Optional<UserEntity> getUser(String email);
 
-    void updateUserName(String email, String newName);
-
-    List<UserEntity> getUserList();
-
-    void deleteUser(String email);
+    Optional<UserEntity> getReferenceUser(String email);
 
 }

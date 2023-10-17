@@ -33,11 +33,9 @@ public class UserServiceImpl implements UserService {
             entityManager.persist(userEntity);
             // 실제 DB 적용
             entityManager.getTransaction().commit();
-
         } catch (Exception e) {
             entityManager.getTransaction().rollback();
             e.printStackTrace();
-
         } finally {
             entityManager.close();
         }
@@ -49,93 +47,54 @@ public class UserServiceImpl implements UserService {
 
         // 조회만 할 경우 트랜잭션은 필요하지 않음
 
+        System.out.println("checkpoint 1");
         UserEntity userEntity = entityManager.find(UserEntity.class, email);
 
-        // if() 객체에 값이 들어왔는지?
+        System.out.println("checkpoint 2");
+        System.out.println(userEntity.getClass().getName());
 
+        System.out.println("checkpoint 3");
         entityManager.close();
 
+        System.out.println("checkpoint 4");
         return Optional.ofNullable(userEntity);
     }
 
     @Override
-    public void updateUserName(String email, String newName) {
+    public Optional<UserEntity> getReferenceUser(String email) {
+
         EntityManager entityManager = CustomEntityManagerFactory.createEntityManger();
 
-        entityManager.getTransaction().begin();
+        // 조회만 할 경우 트랜잭션은 필요하지 않음
 
+        UserEntity userEntity;
         try {
-
-            UserEntity userEntity = entityManager.find(UserEntity.class, email);
-
-            if (userEntity == null) {
-                throw new NotFoundException();
-            }
-
-            userEntity.changeName(newName);
-
-            entityManager.getTransaction().commit();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            entityManager.getTransaction().rollback();
+            System.out.println("checkpoint 1");
+            // getReference 메소드를 사용하면 엔티티 객체가 실제 사용되는 시점에 쿼리가 실행됨
+            userEntity = entityManager.getReference(UserEntity.class, email);
+            System.out.println("checkpoint 2");
+            // 아래 코드가 주석처리되면 오류가 발생하고, 주석을 해제하고 실행하면 오류가 발생하지 않음
+            userEntity.getName();
+            System.out.println("checkpoint 3");
         } finally {
             entityManager.close();
+            System.out.println("checkpoint 4");
         }
+        /*
+        콘솔 출력 내용을 보면 프록시 객체인 것을 확인할 수 있음
+        만약 Entity 클래스를 final 로 선언했다면 프록시 객체를 생성할 수 없어서 오류가 발생함
+         */
+        System.out.println("checkpoint 5");
+        System.out.println(userEntity.getClass().getName());
 
-    }
+        /*
+         세션이 이미 종료되어 있어서 값을 가져올 수 없음
+         이 값을 사용하기 위해서는 entityManager 가 종료되기 전에 사용을 한번 해줘야 함
+         */
+        System.out.println("checkpoint 6");
+        System.out.println(userEntity.getName());
 
-    @Override
-    public List<UserEntity> getUserList() {
-
-        EntityManager entityManager = CustomEntityManagerFactory.createEntityManger();
-
-        try {
-            //entityManager.getTransaction().begin();
-
-            TypedQuery<UserEntity> query = entityManager.createQuery(
-                    "select u from UserEntity u", UserEntity.class);
-            List<UserEntity> userEntities = query.getResultList();
-
-            /*
-            아래 코드로 대체 가능
-            Query query = entityManager.createQuery("select u from UserEntity u");
-            List userEntities = query.getResultList();
-             */
-
-            //entityManager.getTransaction().commit();
-
-            return userEntities;
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            entityManager.close();
-        }
-
-        return null;
-    }
-
-    @Override
-    public void deleteUser(String email) {
-
-        EntityManager entityManager = CustomEntityManagerFactory.createEntityManger();
-
-        entityManager.getTransaction().begin();
-
-        try{
-            UserEntity userEntity = entityManager.find(UserEntity.class, email);
-            if(userEntity==null){
-                throw new NotFoundException();
-            }
-            entityManager.remove(userEntity);
-            entityManager.getTransaction().commit();
-        }catch (Exception e){
-            e.printStackTrace();
-            entityManager.getTransaction().rollback();
-        }finally {
-            entityManager.close();
-        }
-
+        return Optional.ofNullable(userEntity);
     }
 
 }

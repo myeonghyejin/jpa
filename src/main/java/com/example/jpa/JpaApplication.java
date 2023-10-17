@@ -1,49 +1,99 @@
 package com.example.jpa;
 
 import com.example.jpa.entity.UserEntity;
+import com.example.jpa.exception.NotFoundException;
 import com.example.jpa.factory.CustomEntityManagerFactory;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import com.example.jpa.service.UserService;
+import com.example.jpa.service.impl.UserServiceImpl;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 public class JpaApplication {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         CustomEntityManagerFactory.initialization();
+        UserService userService = new UserServiceImpl();
 
-        EntityManager entityManager = CustomEntityManagerFactory.createEntityManger();
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-        // EntityManager에서 트랜잭션을 가져와 관리하기 위한 객체 생성
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        while (true) {
+            System.out.println("Input your Command // [command] [email] [name]");
+            String commandLine = br.readLine();
+            String[] splitCommand = commandLine.split(" ");
 
-        try {
-            // 트랜잭션을 시작해야 DB를 조작할 수 있음
-            entityTransaction.begin();
+            // 별도 값 검증하는 로직은 추가하지 않음
+            if (splitCommand[0].equalsIgnoreCase("exit")) {
+                System.out.println("System closed");
+                break;
 
-            // 저장하고자 하는 엔티티 객체를 생성
-            UserEntity userEntity = new UserEntity("thinkground.flature@gmail.com", "Flature",
-                    LocalDateTime.now(), LocalDateTime.now());
+            } else if (splitCommand[0].equalsIgnoreCase("insert")) {
+                UserEntity userEntity = new UserEntity(splitCommand[1], splitCommand[2],
+                        LocalDateTime.now(), LocalDateTime.now());
+                userService.saveUser(userEntity);
 
-            // UserEntity 객체를 Persistence Context에 추가
-            entityManager.persist(userEntity);
+            } else if (splitCommand[0].equalsIgnoreCase("select")) {
+                Optional<UserEntity> userEntity = userService.getUser(splitCommand[1]);
+                if (userEntity.isPresent()) {
+                    UserEntity user = userEntity.get();
+                    System.out.println("email : " + user.getEmail());
+                    System.out.println("name : " + user.getName());
+                    System.out.println("created date : " + user.getCreatedAt());
+                    System.out.println("updated date : " + user.getUpdatedAt());
 
-            // 실제 DB에 반영
-            entityTransaction.commit();
+                } else {
+                    System.out.println("값을 찾을 수 없습니다.");
+                }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            } else if (splitCommand[0].equalsIgnoreCase("list")) {
 
-            // 예외가 발생했을 경우 트랜잭션 롤백 진행
-            entityTransaction.rollback();
+                List<UserEntity> userEntities = userService.getUserList();
 
-        } finally {
+                if (userEntities.isEmpty()) {
+                    System.out.println("값이 없습니다.");
 
-            // 엔티티 매니저 종료. JDBC에서 Connection 종료하는 것과 동일한 기능으로 보면 됨
-            entityManager.close();
+                } else {
+                    userEntities.forEach(
+                            userEntity -> System.out.println("email : " + userEntity.getEmail()
+                                    + ", name : " + userEntity.getName()
+                                    + ", created Date : " +
+                                    userEntity.getCreatedAt()
+                                    + ", updated Date : " +
+                                    userEntity.getUpdatedAt()));
+                }
+
+            } else if (splitCommand[0].equalsIgnoreCase("updateName")) {
+
+                try {
+                    userService.updateUserName(splitCommand[1], splitCommand[2]);
+                    System.out.println("갱신 완료");
+
+                } catch (NotFoundException e) {
+                    System.out.println("값이 존재하지 않습니다.");
+                }
+
+            } else if (splitCommand[0].equalsIgnoreCase("delete")) {
+
+                try {
+                    userService.deleteUser(splitCommand[1]);
+                    System.out.println("해당 데이터를 삭제하였습니다.");
+
+                } catch (NotFoundException e) {
+                    System.out.println("값이 존재하지 않습니다.");
+                }
+
+            } else {
+                System.out.println(
+                        "Please input Correct Command. ex) exit, insert, select, list, updateName, delete");
+            }
+
         }
 
-        // 팩토리 종료. 커넥션 풀 자원을 반환
         CustomEntityManagerFactory.close();
 
     }

@@ -1,12 +1,19 @@
 package com.example.jpa;
 
+import com.example.jpa.entity.UserEntity;
+import com.example.jpa.exception.NotFoundException;
 import com.example.jpa.factory.CustomEntityManagerFactory;
 import com.example.jpa.service.IdGenerationService;
+import com.example.jpa.service.UserService;
 import com.example.jpa.service.impl.IdGenerationServiceImpl;
+import com.example.jpa.service.impl.UserServiceImpl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 public class JpaApplication {
 

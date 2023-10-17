@@ -1,26 +1,18 @@
 package com.example.jpa;
 
-import com.example.jpa.entity.UserEntity;
-import com.example.jpa.exception.NotFoundException;
 import com.example.jpa.factory.CustomEntityManagerFactory;
-import com.example.jpa.service.IdGenerationService;
-import com.example.jpa.service.UserService;
-import com.example.jpa.service.impl.IdGenerationServiceImpl;
-import com.example.jpa.service.impl.UserServiceImpl;
+import com.example.jpa.service.ValueService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 public class JpaApplication {
 
     public static void main(String[] args) throws IOException {
 
         CustomEntityManagerFactory.initialization();
-        IdGenerationService idGenerationService = new IdGenerationServiceImpl();
+        ValueService valueService = new ValueService();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
@@ -34,23 +26,16 @@ public class JpaApplication {
                 System.out.println("System closed");
                 break;
 
-            } else if (splitCommand[0].equalsIgnoreCase("insertDirect")) {
+            } else if (splitCommand[0].equalsIgnoreCase("originalProvider")) {
 
-                idGenerationService.insertDirectEntity(splitCommand[1]);
+                valueService.insertOriginalProvider();
 
-            } else if (splitCommand[0].equalsIgnoreCase("insertIdentity")) {
+            } else if (splitCommand[0].equalsIgnoreCase("provider")) {
 
-                idGenerationService.insertIdentityEntity(splitCommand[1]);
-
-            }else if (splitCommand[0].equalsIgnoreCase("insertTable")) {
-
-                idGenerationService.insertTableEntity(splitCommand[1]);
-
-            }else if (splitCommand[0].equalsIgnoreCase("insertSequence")) {
-
-                idGenerationService.insertSequenceEntity(splitCommand[1]);
+                valueService.insertProvider();
 
             }
+
         }
 
     }
